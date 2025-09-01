@@ -1,0 +1,490 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             Int              @id @default(autoincrement())
+  code       String           @unique @db.VarChar(50)
+  role_code      String?          @default("user") @db.VarChar(100)
+  password       String           @db.VarChar(255)
+  passwordExpiry DateTime
+  createdAt      DateTime         @default(now())
+  modifyDate     DateTime         @default(now())
+  nameEng        String?          @db.VarChar(100)
+  nameThai       String?          @db.VarChar(100)
+  Contact_Email  String?          @db.VarChar(100)
+  firstAdd       FirstAdd         @default(YES)
+  status         UserStatus       @default(ACTIVE)
+  case_action    CaseAction?      // เพิ่มฟิลด์นี้
+  prefix_id      Int?     
+  prefix         String?          @db.VarChar(100)
+  prefix_th      String?          @db.VarChar(100)
+  name_th        String?          @db.VarChar(100)
+  position_id    Int?
+  position       entiry_Position?   @relation(fields: [position_id], references: [id])         
+  name           String?          @db.VarChar(100)
+  surname        String?          @db.VarChar(100)
+  surname_th     String?          @db.VarChar(100)
+  department_id  Int?
+  department     entity_Department? @relation(fields: [department_id], references: [id])
+  location_id    Int?
+  location       String?          @db.VarChar(100)
+  ref_depot_code     String?          // เพิ่มฟิลด์นี้
+  depot          Depot?           @relation(fields: [ref_depot_code], references: [Code]) // เพิ่มความสัมพันธ์
+
+  create_by      String?          @db.VarChar(50)
+  modify_by      String?          @db.VarChar(50)
+
+  // Back-relation for Movement_Doccument
+  createdMovements  Movement_Doccument[] @relation(name: "CreatedByUser")
+  modifiedMovements Movement_Doccument[] @relation(name: "ModifiedByUser")
+  
+  // Back-relation for MovementDetail
+  createdMovementDetails  MovementDetail[] @relation(name: "MovementDetailCreatedBy")
+  modifiedMovementDetails MovementDetail[] @relation(name: "MovementDetailModifiedBy")
+  
+  // Back-relation for AssetEntity
+  createdAssets  AssetEntity[] @relation(name: "AssetCreatedBy")
+  modifiedAssets AssetEntity[] @relation(name: "AssetModifiedBy")
+
+  createdRepairs  RepairHeader[] @relation(name: "RepairCreatedByUser")
+  modifiedRepairs RepairHeader[] @relation(name: "RepairModifiedByUser")
+
+    // Back-relation for RepairDetail
+  createdRepairDetails  RepairDetail[] @relation(name: "RepairDetailCreatedByUser")
+  modifiedRepairDetails RepairDetail[] @relation(name: "RepairDetailModifiedByUser")
+}
+
+model entiry_Position {
+  id       Int      @id @default(autoincrement())
+  position String   @db.VarChar(255) 
+  level    String?  @db.VarChar(100) 
+  location String   @default("OFFICE") @db.VarChar(100) 
+  users    User[]
+}
+
+model entity_Department {
+  id         Int      @id @default(autoincrement())
+  department String   @db.VarChar(255)
+  users      User[]
+}
+
+model Area {
+  Code        String    @id // รหัสพื้นที่ 3 ตัวอักษร
+  Name        String    // ชื่อพื้นที่
+  Description String?   // รายละเอียดเพิ่มเติม (ถ้ามี)
+  Status      String    @default("ACTIVE") // สถานะ: ACTIVE, INACTIVE
+  
+  // ความสัมพันธ์กับ Depot (optional)
+  Depots      Depot[]
+  
+  // ความสัมพันธ์กับ entity_Customer (optional)
+  Customers   entity_Customer[]
+  
+  // Metadata
+  Created_Date DateTime @default(now())
+  Created_By   String
+  Modify_Date  DateTime? @updatedAt
+  Modify_By    String?
+}
+
+model Depot {
+  Code                    String    @id
+  Name                    String
+  Customers               entity_Customer[]  // Relation to entity_Customer
+  MovementHeaders         Movement_Doccument[] // Relation to Movement_Doccument
+
+  // Movement Approval
+  Approval1ref_User     String?   // แทน 1_Move_Approval_User_Id
+  ref_User1Name       String?   // แทน 1_Move_Approval_Name
+  moveApproval1Email      String?   // แทน 1_Move_Approval_Email
+
+  Approval2ref_User     String?   // แทน 2_Move_Approval_User_Id
+  ref_User2Name       String?   // แทน 2_Move_Approval_Name
+  moveApproval2Email      String?   // แทน 2_Move_Approval_Email
+
+  Approval3ref_User     String?   // แทน 3_Move_Approval_User_Id
+  ref_User3Name       String?   // แทน 3_Move_Approval_Name
+  moveApproval3Email      String?   // แทน 3_Move_Approval_Email
+
+  Approval4ref_User     String?   // แทน 4_Move_Approval_User_Id
+  ref_User4Name       String?   // แทน 4_Move_Approval_Name
+  moveApproval4Email      String?   // แทน 4_Move_Approval_Email
+
+  // Acknowledge User
+  Acknowledge_User_Id     String?
+  Acknowledge_User_Name   String?
+  Acknowledge_User_Email  String?
+
+  // Repair Approval
+  repairApproval1UserId   String?   // แทน 1_Repair_Approval_User_Id
+  repairApproval1Name     String?   // แทน 1_Repair_Approval_Name
+  repairApproval1Email    String?   // แทน 1_Repair_Approval_Email
+
+  repairApproval2UserId   String?   // แทน 2_Repair_Approval_User_Id
+  repairApproval2Name     String?   // แทน 2_Repair_Approval_Name
+  repairApproval2Email    String?   // แทน 2_Repair_Approval_Email
+
+  repairApproval3UserId   String?   // แทน 3_Repair_Approval_User_Id
+  repairApproval3Name     String?   // แทน 3_Repair_Approval_Name
+  repairApproval3Email    String?   // แทน 3_Repair_Approval_Email
+
+  repairApproval4UserId   String?   // แทน 4_Repair_Approval_User_Id
+  repairApproval4Name     String?   // แทน 4_Repair_Approval_Name
+  repairApproval4Email    String?   // แทน 4_Repair_Approval_Email
+
+  // Audit Fields
+  Created_Date            DateTime  @default(now())
+  Created_By              String
+  Modify_Date             DateTime? @updatedAt
+  Modify_By               String?
+
+   RepairHeaders   RepairHeader[] // Relation to RepairHeader
+
+  // เพิ่ม relation กลับไปยัง User
+  users User[]
+
+  // เพิ่มความสัมพันธ์กับ Area (optional)
+  area_code    String?
+  area         Area?    @relation(fields: [area_code], references: [Code])
+}
+
+model entity_Customer {
+  Id                      String   @id // Primary Key (entity_Customer Id)
+  ref_Customer_Name        String // Name                  String
+  entity_Customer_ID                   String     @unique
+  entity_CustomerCode              String?     @unique
+  entity_Customer_Area                 String?
+  entity_Customer_Address              String?    @db.VarChar(500)
+  entity_Customer_Status               String?
+  Business_Registration   String?
+  entity_Customer_Mobile               String?
+  entity_Customer_Presentindentity            String?
+  Payer_Id                String?
+  Payer_Description       String?
+  Ship_To_Id              String?
+  Ship_To_Description     String?
+
+  // Foreign Key (Sales Office)
+  Depot_Number              String  
+  Depot                   Depot   @relation(fields: [Depot_Number], references: [Code])
+
+  Blocked_or_Suspend      CusStatus  @default(False)
+
+  // Metadata
+  Created_Date            DateTime
+  Created_By              String
+  Modify_Date             DateTime?
+  Modify_By               String?
+
+  // เพิ่มความสัมพันธ์กับ Area (optional)
+  area_code    String?
+  area         Area?    @relation(fields: [area_code], references: [Code])
+}
+
+model Movement_Doccument {
+  Document_Number                    String   @id // Primary Key
+  Created_Depot_Code                 String  // Foreign Key - Copied from User's Depot
+  Created_Depot                      Depot   @relation(fields: [Created_Depot_Code], references: [Code])
+
+  Origin_Location                    String
+  Origin_Location_Type               String // "D" = Depot, "C" = entity_Customer
+  Destination_Location               String
+  Destination_Code                   String
+  Destination_Location_Type          String // "D" = Depot, "C" = entity_Customer
+
+  Origin_Description                 String    @db.VarChar(500)
+  Destination_Description            String    @db.VarChar(500)
+
+  Details                            String
+  Document_Status                    String // O = Open, I = In-Progress, S = Wait entity_Customer Signature, etc.
+
+  Next_Approval_User_Id              String? // Next user that needs to approve
+
+  // Move Approvals
+  Move_Approval_1_User_Id            String?
+  Move_Approval_1_Name               String?
+  Move_Approval_1_Email              String?
+  Move_Approval_1_comment             String?
+  Move_Approval_1_Status             String? // Null = Not approved, Y = Approved, R = Rejected
+  Move_Approval_1_Date               DateTime?
+
+  Move_Approval_2_User_Id            String?
+  Move_Approval_2_Name               String?
+  Move_Approval_2_Email              String?
+  Move_Approval_2_comment             String?
+  Move_Approval_2_Status             String? 
+  Move_Approval_2_Date               DateTime?
+
+  Move_Approval_3_User_Id            String?
+  Move_Approval_3_Name               String?
+  Move_Approval_3_Email              String?
+  Move_Approval_3_comment             String?
+  Move_Approval_3_Status             String?
+  Move_Approval_3_Date               DateTime?
+
+  Move_Approval_4_User_Id            String?
+  Move_Approval_4_Name               String?
+  Move_Approval_4_Email              String?
+  Move_Approval_4_comment             String?
+  Move_Approval_4_Status             String?
+  Move_Approval_4_Date               DateTime?
+
+  // entity_Customer Signature
+  Origin_Customer_Signature_Required      String // "Y" if Origin Location Type = "C", else "N"
+  Origin_Customer_Signature               String?
+  Origin_Customer_Signature_Date          DateTime?
+
+  Destination_Customer_Signature_Required String // "Y" if Destination Location Type = "C", else "N"
+  Destination_Customer_Signature          String?
+  Destination_Customer_Signature_Date     DateTime?
+
+  // Acknowledgment
+  Acknowledge_User_Id                String?
+  Acknowledge_User_Name              String?
+  Acknowledge_User_comment              String?
+  Acknowledge_User_Email             String?
+  Acknowledge_Status                 String? // Null or "Y" = Acknowledged
+  Acknowledge_Date                   DateTime?
+
+
+
+  Current_step                       Step?
+
+  // Metadata
+  Created_By                         String    // Foreign Key - Creator (User)
+  Created_By_User                    User      @relation(name: "CreatedByUser", fields: [Created_By], references: [code])
+
+  Modify_Date                        DateTime?
+  Modify_By                          String?   // Foreign Key - Modifier (User)
+  Modify_By_User                     User?     @relation(name: "ModifiedByUser", fields: [Modify_By], references: [code])
+
+  Created_Date                       DateTime
+  
+  // Relations
+  MovementDetails                    MovementDetail[]
+}
+
+model MovementDetail {
+  Id                      Int      @id @default(autoincrement()) // Primary Key - Running Number
+  Document_Number         String   // Foreign Key - เชื่อมกับ Movement_Doccument
+  Movement_Doccument          Movement_Doccument @relation(fields: [Document_Number], references: [Document_Number])
+
+  Asset_ID_Number     String   // Foreign Key - เชื่อมกับ AssetEntity
+  AssetEntity                   AssetEntity    @relation(fields: [Asset_ID_Number], references: [Asset_ID_Number])
+
+  move_in_date              DateTime?
+  // Metadata
+  Created_By_UserId       Int
+  Created_By              User     @relation(name: "MovementDetailCreatedBy", fields: [Created_By_UserId], references: [id])
+
+  Modify_Date             DateTime?
+  Modify_By_UserId        Int?
+  Modify_By               User?    @relation(name: "MovementDetailModifiedBy", fields: [Modify_By_UserId], references: [id])
+
+  
+
+  Created_Date            DateTime @default(now())
+}
+
+model AssetEntity {
+  Asset_ID_Number       String   @id // Primary Key - Serial Number or Internal AssetEntity Number
+  Asset_Type                String   // F = Freezer, C = Cart, etc.
+  Asset_Description         String   // In general, cart license plate number
+  Model_No                  String
+  Equipment_Description     String   // License plate number or asset size, etc.
+  Running_Asset_Number          String
+
+  // Current Location (Can be Depot or entity_Customer)
+  Current_Location          String
+  Current_Location_Type     String
+  Location_Code             String 
+  Location_Type             Location_Type 
+  
+  // Status of AssetEntity
+  Asset_Status              Asset_Status  // Y = Available, M = In Movement, R = Repairing
+
+  // เพิ่มฟิลด์ใหม่
+  Equipment                 String?       // ชื่ออุปกรณ์
+  Asset_Description_2       String?       // ทะเบียนรถสามล้อ
+  Cost_Center               String?       // ศูนย์ต้นทุน
+  Running_Asset_Code                  String?       // รหัส JDE
+  Customer_Name_Thai        String?       // ชื่อ-ร้านค้า ภาษาไทย
+  Address                   String?       // ที่อยู่1
+  Asset_Brand                 String?       // ยี่ห้อ JDE
+  Asset_Class               String?       // AssetEntity Class (Type)
+  Entity_Number                String?       // เลขที่เอกสาร
+  Asset_Serial_No        String?       // เลขที่ผลิต/หมายเหตุ SD
+  Size_Dimension            String?       // ขนาดและLOT
+  Status_Description        String?       // สถานะทรัพย์สิน
+  Asset_Remark                String?       // หมายเหตุ JDE
+  Cabinet_Size              String?       // ขนาดตู้
+  Insurance_Remark          String?       // หมายเหตุ ประกัน JDE/capex/PO
+  Asset_Made_Name_Plate   String?       // Manufacturer Name Plate
+  Enitity_Usage_Tracking_JDE    String?       // หมายเหตุ ใช้งานใหม่ ติดตาม JDE
+  Market_Description        String?       // รายละเอียดตลาด
+  Enitity_Channel_Description String?       // รายละเอียดช่องทางการค้า
+  Enitity_ChanneTypel_Description  String?       // รายละเอียดประเภทช่องทาง
+  usefulLife                String?      
+  ageYear                   String?      
+  ageMonth                  String?      
+  purchaseMonth             String?      
+  purchaseYear              String?       
+  branchOrZone              String?         
+  
+
+  // Metadata
+  Created_By_UserId         String  // เปลี่ยนจาก Int เป็น String
+  Created_By                User    @relation(name: "AssetCreatedBy", fields: [Created_By_UserId], references: [code])
+
+  Modify_Date               DateTime?
+  Modify_By_UserId          String?  // เปลี่ยนจาก Int? เป็น String?
+  Modify_By                 User?   @relation(name: "AssetModifiedBy", fields: [Modify_By_UserId], references: [code])
+
+  Created_Date              DateTime @default(now())
+
+  // Relations
+  Movements                 MovementDetail[] // This asset is included in movement documents
+  RepairDetails             RepairDetail[] // This asset is included in repair documents
+}
+
+
+model RepairHeader {
+  Document_Number                String   @id // Primary Key - System running number Format: REPYYYYMMDDXXXX
+  Created_Depot_Code            String   // Foreign Key - Copied from User's Depot
+  Created_Depot                 Depot    @relation(fields: [Created_Depot_Code], references: [Code])
+
+  Repair_Location               String   // The value can be User's Depot or can be entity_Customer Id
+  Repair_Location_Type          String   // D = Depot, C = entity_Customer
+  
+  Description                   String   // Detail of repair
+  Location_Description          String   // Detail of repair location
+  Document_Status               String   // O = Open, I = In-Progress, C = Completed, R = Rejected, X = Cancelled
+  
+  Next_Approval_User_Id         String?  // Indicate next user id that needs to approve document
+
+  // Repair Approvals
+  repairApproval1UserId         String?  // Copied from Depot Table
+  repairApproval1Name           String?  // Copied from Depot Table
+  repairApproval1Email          String?  // Copied from Depot Table
+  repairApproval1Status         String?  // Null = Not approved yet, Y = Approved, R = Rejected
+  repairApproval1Date           DateTime?
+
+  repairApproval2UserId         String?  // Copied from Depot Table
+  repairApproval2Name           String?  // Copied from Depot Table
+  repairApproval2Email          String?  // Copied from Depot Table
+  repairApproval2Status         String?  // Null = Not approved yet, Y = Approved, R = Rejected
+  repairApproval2Date           DateTime?
+
+  repairApproval3UserId         String?  // Copied from Depot Table
+  repairApproval3Name           String?  // Copied from Depot Table
+  repairApproval3Email          String?  // Copied from Depot Table
+  repairApproval3Status         String?  // Null = Not approved yet, Y = Approved, R = Rejected
+  repairApproval3Date           DateTime?
+
+  repairApproval4UserId         String?  // Copied from Depot Table
+  repairApproval4Name           String?  // Copied from Depot Table
+  repairApproval4Email          String?  // Copied from Depot Table
+  repairApproval4Status         String?  // Null = Not approved yet, Y = Approved, R = Rejected
+  repairApproval4Date           DateTime?
+  
+
+  // Metadata
+  Created_Date                  DateTime
+  Created_By                    String   // Foreign Key - Creator (User)
+  Created_By_User               User     @relation(name: "RepairCreatedByUser", fields: [Created_By], references: [code])
+  
+  Modify_Date                   DateTime?
+  Modify_By                     String?  // Foreign Key - Modifier (User)
+  Modify_By_User                User?    @relation(name: "RepairModifiedByUser", fields: [Modify_By], references: [code])
+  
+  // Relations
+  RepairDetails                 RepairDetail[]
+}
+
+model RepairDetail {
+  Id                    Int           @id @default(autoincrement()) // Primary Key - Running Number
+  Document_Number       String        // Foreign Key - Document Number from Repair Header table
+  RepairHeader          RepairHeader  @relation(fields: [Document_Number], references: [Document_Number])
+
+  Asset_ID_Number   String        // Foreign Key - From AssetEntity table
+  AssetEntity                 AssetEntity         @relation(fields: [Asset_ID_Number], references: [Asset_ID_Number])
+
+  // Metadata
+  Created_Date          DateTime
+  Created_By            String        // Foreign Key - Creator (User)
+  Created_By_User       User          @relation(name: "RepairDetailCreatedByUser", fields: [Created_By], references: [code])
+  
+  Modify_Date           DateTime?
+  Modify_By             String?       // Foreign Key - Modifier (User)
+  Modify_By_User        User?         @relation(name: "RepairDetailModifiedByUser", fields: [Modify_By], references: [code])
+}
+
+
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum FirstAdd {
+  YES
+  NO
+}
+
+enum UserStatus {
+  ACTIVE
+  NOT_ACTIVE
+}
+
+enum  CusStatus {
+  False
+   blocked
+   Suspend 
+}
+
+
+// เพิ่ม enum สำหรับ case_action
+enum CaseAction {
+  CaseAction1
+  CaseAction2
+  CaseAction3
+  CaseAction4
+  CaseAction5
+  Customer_Old
+  Customer_New
+  Account
+  Sales
+}
+
+enum Location_Type {
+  D
+  C
+}
+
+enum Asset_Status {
+  Y
+  X
+  R
+  M
+}
+
+
+enum Step {
+  Waiting_CaseAction1
+  Waiting_CaseAction2
+  Waiting_CaseAction3
+  Waiting_CaseAction4
+  Waiting_CaseAction5
+  Waiting_Customer_Old
+  Waiting_Customer
+  Waiting_Customer_New
+  Waiting_CaseAction6
+  Completed
+  Rejected
+}
